@@ -1,0 +1,99 @@
+#include <algorithm>
+#include <iostream>
+#include <string>
+using namespace std;
+
+// Function to add two numbers in base B
+std::string add(const std::string& num1, const std::string& num2, int B) {
+  int len1 = num1.length();
+  int len2 = num2.length();
+  int carry = 0, i = len1 - 1, j = len2 - 1;
+  std::string result;
+
+  while (i >= 0 || j >= 0 || carry) {
+    int sum = carry;
+    if (i >= 0) sum += num1[i--] - '0';
+    if (j >= 0) sum += num2[j--] - '0';
+
+    carry = sum / B;
+    sum = sum % B;
+
+    result += std::to_string(sum);
+  }
+
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
+// Function to subtract two numbers in base B
+std::string subtract(const std::string& num1, const std::string& num2,
+                          int B) {
+  int len1 = num1.length();
+  int len2 = num2.length();
+  int carry = 0, i = len1 - 1, j = len2 - 1;
+  std::string result;
+
+  while (i >= 0 || j >= 0 || carry) {
+    int diff =
+        carry + (i >= 0 ? num1[i] - '0' : 0) - (j >= 0 ? num2[j] - '0' : 0);
+
+    if (diff < 0) {
+      diff += B;
+      carry = -1;
+    } else {
+      carry = 0;
+    }
+
+    result += std::to_string(diff);
+
+    i--;
+    j--;
+  }
+
+  // Remove leading zeros
+  while (result.size() > 1 && result.back() == '0') {
+    result.pop_back();
+  }
+
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
+string karatsuba(string num1, string num2, int base) {
+  size_t n = max(num1.size(), num2.size());
+  if (n == 1) return to_string(((num1[0] - '0') * (num2[0] - '0')) % base);
+  while (num1.size() < n) num1.insert(0, "0");
+  while (num2.size() < n) num2.insert(0, "0");
+  string a = num1.substr(0, n / 2);
+  string b = num1.substr(n / 2, n - n / 2);
+  string c = num2.substr(0, n / 2);
+  string d = num2.substr(n / 2, n - n / 2);
+  string ac = karatsuba(a, c, base);
+  string bd = karatsuba(b, d, base);
+  string abcd = karatsuba(add(a, b, base), add(c, d, base), base);
+  abcd = subtract(abcd, add(ac, bd, base), base);
+  for (int i = 0; i < 2 * (n - n / 2); i++) ac += "0";
+  for (int i = 0; i < n - n / 2; i++) abcd += "0";
+  string result = add(add(ac, abcd, base), bd, base);
+
+  // Remove leading zeros from result
+  size_t startpos = result.find_first_not_of("0");
+  if (startpos != std::string::npos) result = result.substr(startpos);
+
+  return result.empty() ? "0" : result;
+}
+
+string divide(string dividend, string divisor, int base) {
+return "0";
+}
+
+int main() {
+  string I1, I2;
+  int B;
+  cin >> I1 >> I2 >> B;
+  cout << add(I1, I2, B) << " ";
+  cout << karatsuba(I1, I2, B) << " ";
+  cout << divide(I1, I2, B);
+
+  return 0;
+}

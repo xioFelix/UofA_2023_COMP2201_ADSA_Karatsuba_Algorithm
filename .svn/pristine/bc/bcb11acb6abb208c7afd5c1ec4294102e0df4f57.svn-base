@@ -1,0 +1,100 @@
+#include <algorithm>
+#include <iostream>
+#include <string>
+
+std::string addBaseB(const std::string& num1, const std::string& num2, int B) {
+  int len1 = num1.length();
+  int len2 = num2.length();
+  int carry = 0, i = len1 - 1, j = len2 - 1;
+  std::string result;
+
+  while (i >= 0 || j >= 0 || carry) {
+    int sum = carry;
+    if (i >= 0) sum += num1[i--] - '0';
+    if (j >= 0) sum += num2[j--] - '0';
+
+    carry = sum / B;
+    sum = sum % B;
+
+    result += std::to_string(sum);
+  }
+
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
+std::string subtractBaseB(const std::string& num1, const std::string& num2,
+                          int B) {
+  int len1 = num1.length();
+  int len2 = num2.length();
+  int carry = 0, i = len1 - 1, j = len2 - 1;
+  std::string result;
+
+  while (i >= 0 || j >= 0 || carry) {
+    int diff =
+        carry + (i >= 0 ? num1[i] - '0' : 0) - (j >= 0 ? num2[j] - '0' : 0);
+
+    if (diff < 0) {
+      diff += B;
+      carry = -1;
+    } else {
+      carry = 0;
+    }
+
+    result += std::to_string(diff);
+
+    i--;
+    j--;
+  }
+
+  // Remove leading zeros
+  while (result.size() > 1 && result.back() == '0') {
+    result.pop_back();
+  }
+
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
+std::string karatsubaMultiply(const std::string& x, const std::string& y,
+                              int B) {
+  if (x.length() <= 1 || y.length() <= 1) {
+    int result = (x[0] - '0') * (y[0] - '0');
+    return std::to_string(result);
+  }
+
+  int n = std::max(x.length(), y.length());
+  int m = n / 2;
+
+  std::string xL = x.substr(0, x.length() - m);
+  std::string xR = x.substr(x.length() - m);
+  std::string yL = y.substr(0, y.length() - m);
+  std::string yR = y.substr(y.length() - m);
+
+  std::string ac = karatsubaMultiply(xL, yL, B);
+  std::string bd = karatsubaMultiply(xR, yR, B);
+  std::string a_plus_b_times_c_plus_d =
+      karatsubaMultiply(addBaseB(xL, xR, B), addBaseB(yL, yR, B), B);
+  std::string ad_bc =
+      subtractBaseB(subtractBaseB(a_plus_b_times_c_plus_d, ac, B), bd, B);
+
+  for (int i = 0; i < 2 * m; i++) {
+    ac += "0";
+  }
+  for (int i = 0; i < m; i++) {
+    ad_bc += "0";
+  }
+
+  return addBaseB(addBaseB(ac, bd, B), ad_bc, B);
+}
+
+int main() {
+  std::string x, y;
+  int B;
+  std::cin >> x >> y >> B;
+
+  std::cout << addBaseB(x, y, B) << " " << karatsubaMultiply(x, y, B)
+            << std::endl;
+
+  return 0;
+}

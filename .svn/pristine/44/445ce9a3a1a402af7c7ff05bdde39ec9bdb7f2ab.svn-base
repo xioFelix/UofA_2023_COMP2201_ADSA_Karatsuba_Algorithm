@@ -1,0 +1,76 @@
+#include <algorithm>
+#include <iostream>
+#include <string>
+
+std::string addBaseB(const std::string& num1, const std::string& num2, int B) {
+  std::string n1 = num1, n2 = num2;
+
+  // Make the two strings of equal length by prepending zeros
+  while (n1.length() < n2.length()) n1 = "0" + n1;
+  while (n2.length() < n1.length()) n2 = "0" + n2;
+
+  std::string result = "";
+  int carry = 0;
+
+  for (int i = n1.length() - 1; i >= 0; i--) {
+    int digit1 = n1[i] - '0';
+    int digit2 = n2[i] - '0';
+
+    int sum = digit1 + digit2 + carry;
+
+    carry = sum / B;
+    sum %= B;
+
+    result = std::to_string(sum) + result;
+  }
+
+  if (carry > 0) {
+    result = std::to_string(carry) + result;
+  }
+
+  return result;
+}
+
+std::string subtractBaseB(const std::string& num1, const std::string& num2,
+                          int B) {
+  std::string n1 = num1, n2 = num2;
+
+  // Make the two strings of equal length by prepending zeros
+  while (n1.length() < n2.length()) n1 = "0" + n1;
+  while (n2.length() < n1.length()) n2 = "0" + n2;
+
+  std::string result = "";
+  int borrow = 0;
+
+  for (int i = n1.length() - 1; i >= 0; i--) {
+    int digit1 = n1[i] - '0';
+    int digit2 = n2[i] - '0';
+
+    int diff = digit1 - digit2 - borrow;
+
+    if (diff < 0) {
+      diff += B;
+      borrow = 1;
+    } else {
+      borrow = 0;
+    }
+
+    result = std::to_string(diff) + result;
+  }
+
+  // Removing leading zeros from the result
+  while (result.length() > 1 && result[0] == '0') {
+    result = result.substr(1);
+  }
+
+  return result;
+}
+
+int main() {
+  std::string num1, num2;
+  int B;
+  std::cin >> num1 >> num2 >> B;
+  std::cout << "Addition: " << addBaseB(num1, num2, B) << std::endl;
+  std::cout << "Subtraction: " << subtractBaseB(num1, num2, B) << std::endl;
+  return 0;
+}

@@ -1,0 +1,112 @@
+#include <algorithm>
+#include <iostream>
+#include <string>
+
+std::string addBaseB(const std::string& num1, const std::string& num2, int B) {
+  std::string n1 = num1, n2 = num2;
+
+  // Make the two strings of equal length by prepending zeros
+  while (n1.length() < n2.length()) n1 = "0" + n1;
+  while (n2.length() < n1.length()) n2 = "0" + n2;
+
+  std::string result = "";
+  int carry = 0;
+
+  for (int i = n1.length() - 1; i >= 0; i--) {
+    int digit1 = n1[i] - '0';
+    int digit2 = n2[i] - '0';
+
+    int sum = digit1 + digit2 + carry;
+
+    carry = sum / B;
+    sum %= B;
+
+    result = std::to_string(sum) + result;
+  }
+
+  if (carry > 0) {
+    result = std::to_string(carry) + result;
+  }
+
+  return result;
+}
+
+std::string subtractBaseB(const std::string& num1, const std::string& num2,
+                          int B) {
+  std::string n1 = num1, n2 = num2;
+
+  // Make the two strings of equal length by prepending zeros
+  while (n1.length() < n2.length()) n1 = "0" + n1;
+  while (n2.length() < n1.length()) n2 = "0" + n2;
+
+  std::string result = "";
+  int borrow = 0;
+
+  for (int i = n1.length() - 1; i >= 0; i--) {
+    int digit1 = n1[i] - '0';
+    int digit2 = n2[i] - '0';
+
+    int diff = digit1 - digit2 - borrow;
+
+    if (diff < 0) {
+      diff += B;
+      borrow = 1;
+    } else {
+      borrow = 0;
+    }
+
+    result = std::to_string(diff) + result;
+  }
+
+  // Removing leading zeros from the result
+  while (result.length() > 1 && result[0] == '0') {
+    result = result.substr(1);
+  }
+
+  return result;
+}
+
+std::string karatsubaMultiply(const std::string& x, const std::string& y,
+                              int B) {
+  if (x.length() <= 1 && y.length() <= 1) {
+    int prod = (x[0] - '0') * (y[0] - '0');
+    return std::to_string(prod);
+  }
+
+  size_t len = std::max(x.length(), y.length());
+  size_t half_size = (len / 2) + (len % 2);
+
+  std::string a =
+      (x.length() > half_size) ? x.substr(0, x.length() - half_size) : "0";
+  std::string b =
+      (x.length() > half_size) ? x.substr(x.length() - half_size) : x;
+
+  std::string c =
+      (y.length() > half_size) ? y.substr(0, y.length() - half_size) : "0";
+  std::string d =
+      (y.length() > half_size) ? y.substr(y.length() - half_size) : y;
+
+  std::string ac = karatsubaMultiply(a, c, B);
+  std::string bd = karatsubaMultiply(b, d, B);
+  std::string ad_bc =
+      karatsubaMultiply(addBaseB(a, b, B), addBaseB(c, d, B), B);
+  ad_bc = subtractBaseB(ad_bc, addBaseB(ac, bd, B), B);
+
+  for (size_t i = 0; i < 2 * half_size; i++) {
+    ac += "0";
+  }
+  for (size_t i = 0; i < half_size; i++) {
+    ad_bc += "0";
+  }
+
+  return addBaseB(addBaseB(ac, ad_bc, B), bd, B);
+}
+
+int main() {
+  std::string num1, num2;
+  int B;
+  std::cin >> num1 >> num2 >> B;
+  std::cout << addBaseB(num1, num2, B) << " ";                 // Addition
+  std::cout << karatsubaMultiply(num1, num2, B) << std::endl;  // Multiplication
+  return 0;
+}

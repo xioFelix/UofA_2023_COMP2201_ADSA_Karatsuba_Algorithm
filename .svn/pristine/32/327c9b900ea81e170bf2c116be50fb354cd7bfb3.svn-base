@@ -1,0 +1,132 @@
+#include <algorithm>
+#include <iostream>
+#include <string>
+
+std::string addBaseB(const std::string& num1, const std::string& num2, int B) {
+  std::string n1 = num1, n2 = num2;
+
+  // Make the two strings of equal length by prepending zeros
+  while (n1.length() < n2.length()) n1 = "0" + n1;
+  while (n2.length() < n1.length()) n2 = "0" + n2;
+
+  std::string result = "";
+  int carry = 0;
+
+  for (int i = n1.length() - 1; i >= 0; i--) {
+    int digit1 = n1[i] - '0';
+    int digit2 = n2[i] - '0';
+
+    int sum = digit1 + digit2 + carry;
+
+    carry = sum / B;
+    sum %= B;
+
+    result = std::to_string(sum) + result;
+  }
+
+  if (carry > 0) {
+    result = std::to_string(carry) + result;
+  }
+
+  return result;
+}
+
+std::string subtractBaseB(const std::string& num1, const std::string& num2,
+                          int B) {
+  std::string n1 = num1, n2 = num2;
+
+  // Make the two strings of equal length by prepending zeros
+  while (n1.length() < n2.length()) n1 = "0" + n1;
+  while (n2.length() < n1.length()) n2 = "0" + n2;
+
+  std::string result = "";
+  int borrow = 0;
+
+  for (int i = n1.length() - 1; i >= 0; i--) {
+    int digit1 = n1[i] - '0';
+    int digit2 = n2[i] - '0';
+
+    int diff = digit1 - digit2 - borrow;
+
+    if (diff < 0) {
+      diff += B;
+      borrow = 1;
+    } else {
+      borrow = 0;
+    }
+
+    result = std::to_string(diff) + result;
+  }
+
+  // Removing leading zeros from the result
+  while (result.length() > 1 && result[0] == '0') {
+    result = result.substr(1);
+  }
+
+  return result;
+}
+
+std::string karatsubaMultiply(const std::string& x, const std::string& y,
+                              int B) {
+  // Base case: if the numbers are single-digit, multiply them directly
+  if (x.length() <= 1 && y.length() <= 1) {
+    int result = (x[0] - '0') * (y[0] - '0');
+    return std::to_string(result %
+                          B);  // Ensure we return a value within base B
+  }
+
+  size_t n = std::max(x.length(), y.length());
+  size_t half = (n + 1) / 2;  // Adjusted for asymmetric lengths
+
+  // Split the numbers. Note: For asymmetric lengths, the bottom part can be
+  // longer.
+  std::string a = x.length() > half ? x.substr(0, x.length() - half) : "0";
+  std::string b = x.substr(x.length() > half ? x.length() - half : 0);
+
+  std::string c = y.length() > half ? y.substr(0, y.length() - half) : "0";
+  std::string d = y.substr(y.length() > half ? y.length() - half : 0);
+
+  // Recursively calculate ac and bd
+  std::string ac = karatsubaMultiply(a, c, B);
+  std::string bd = karatsubaMultiply(b, d, B);
+
+  // Compute (a+b)(c+d)
+  std::string a_plus_b_times_c_plus_d =
+      karatsubaMultiply(addBaseB(a, b, B), addBaseB(c, d, B), B);
+
+  // Calculate ad + bc using the formula: (a+b)(c+d) - ac - bd
+  std::string ad_plus_bc =
+      subtractBaseB(subtractBaseB(a_plus_b_times_c_plus_d, ac, B), bd, B);
+
+  // Assemble the result with proper shifts
+  for (size_t i = 0; i < 2 * half; i++) {
+    ac = addBaseB(ac + "0", "0", B);  // Adjust for base B
+  }
+
+  for (size_t i = 0; i < half; i++) {
+    ad_plus_bc = addBaseB(ad_plus_bc + "0", "0", B);  // Adjust for base B
+  }
+
+  // Combine the results: ac * B^n + ad_plus_bc * B^{n/2} + bd
+  std::string result = addBaseB(addBaseB(ac, bd, B), ad_plus_bc, B);
+
+  // Remove leading zeros from the result
+  size_t start_pos = result.find_first_not_of('0');
+  if (start_pos != std::string::npos) {
+    result = result.substr(start_pos);
+  } else {
+    // In case the result is entirely zeros, just return "0"
+    result = "0";
+  }
+
+  return result;
+}
+
+int main() {
+  std::string num1, num2;
+  int B;
+  std::cin >> num1 >> num2 >> B;
+  std::cout << addBaseB(num1, num2, B) << " ";                 // Addition
+  std::cout << karatsubaMultiply(num1, num2, B) << std::endl;  // Multiplication
+  return 0;
+}

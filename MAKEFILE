@@ -1,0 +1,6 @@
+all: main.cpp
+g++ -o main.out -O2 -Wall main.cpp
+./main.out
+
+clean:
+    rm -f *.out
